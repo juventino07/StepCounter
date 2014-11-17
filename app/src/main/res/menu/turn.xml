@@ -1,0 +1,9 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".TurnActivity" >
+    <item android:id="@+id/action_ScanQrCode"
+        android:title="@string/action_ScanQrCode"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:onClick="ScanBarcode_Click"/>
+</menu>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">StepCounter</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_ScanQrCode">Scan QR Code</string>
+    <string name="StepsPrefixText">Amount of steps to take:</string>
+    <string name="FollowingDirectionPrefixTextView">In folgende Richtung:</string>
+
+</resources>
