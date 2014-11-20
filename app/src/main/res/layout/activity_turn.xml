@@ -11,9 +11,10 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" />
 <ImageView
+    android:id="@+id/FollowingDirectionImageView"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:src="@+id/"/>
+    android:layout_height="40dp"
+    />
 <TextView
     android:id="@+id/amountOfStepsTextView"
     android:layout_width="wrap_content"

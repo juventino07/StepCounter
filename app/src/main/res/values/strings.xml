@@ -7,5 +7,6 @@
     <string name="action_ScanQrCode">Scan QR Code</string>
     <string name="StepsPrefixText">Amount of steps to take:</string>
     <string name="FollowingDirectionPrefixTextView">In folgende Richtung:</string>
-
+    <string name="arrow">"@drawable/"+@arrowDirection</string>
+    <string name="arrowDirection"></string>
 </resources>

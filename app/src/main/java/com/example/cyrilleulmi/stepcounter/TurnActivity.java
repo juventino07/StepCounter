@@ -1,6 +1,7 @@
 package com.example.cyrilleulmi.stepcounter;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,24 +19,26 @@ import org.json.JSONException;
 
 import java.util.List;
 
-public class TurnActivity extends Activity implements SensorEventListener {
+public class TurnActivity extends Activity implements SensorEventListener, StepListener {
 
     private static final int BUFFER_SIZE = 10;
     private SensorManager sensorManager;
     private RingBuffer initialRotation = new RingBuffer(BUFFER_SIZE);
     private RingBuffer rotation = new RingBuffer(BUFFER_SIZE);
     private Sensor rotationSensor;
+    private Sensor accelerationSensor;
     private List<PathDescription> pathDescription;
     private Integer amountOfTakenSteps = 0;
     private Integer currentPathItem = 0;
     private String jsonPathDefinition;
+    private StepCounter stepCounter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_turn);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
     }
 
     @Override
@@ -69,6 +73,7 @@ public class TurnActivity extends Activity implements SensorEventListener {
         super.onResume();
         sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_UI);
         this.DisplayPathDescriptionOnUi();
+        this.stepCounter = new StepCounter(this, this);
     }
 
     @Override
@@ -135,28 +140,47 @@ public class TurnActivity extends Activity implements SensorEventListener {
     }
 
     public void NextItemClick(View view) {
+        this.HandleStep();
+        this.DisplayPathDescriptionOnUi();
+    }
+
+    private void HandleStep() {
         this.amountOfTakenSteps++;
 
         if (this.amountOfTakenSteps == this.pathDescription.get(this.currentPathItem).getAmountOfSteps()){
             this.amountOfTakenSteps = 0;
             this.currentPathItem++;
         }
-
-        this.DisplayPathDescriptionOnUi();
     }
 
     private void DisplayPathDescriptionOnUi() {
         try{
-            // Tim: Done werded die Aktuelli azahl schrett is UI ue do... falls s UI abänderisch mosch das done ou abändere
-            TextView textViewAmountOfSteps = (TextView)findViewById(R.id.amountOfStepsTextView);
-            Integer amountOfStepsToTake = this.pathDescription.get(this.currentPathItem).getAmountOfSteps() - this.amountOfTakenSteps;
-            textViewAmountOfSteps.setText(amountOfStepsToTake.toString());
-
-            TextView textViewDirection = (TextView)findViewById(R.id.FollowingDirectionTextView);
-            textViewDirection.setText(this.pathDescription.get(this.currentPathItem).getStepDirection().toString());
-        }
+            SetShownText();
+            SetShownArrowImage();
+           }
         catch(Exception e){
         }
+    }
+
+    private void SetShownText() {
+        TextView textViewAmountOfSteps = (TextView)findViewById(R.id.amountOfStepsTextView);
+        Integer amountOfStepsToTake = this.pathDescription.get(this.currentPathItem).getAmountOfSteps() - this.amountOfTakenSteps;
+        textViewAmountOfSteps.setText(amountOfStepsToTake.toString());
+    }
+
+    private void SetShownArrowImage() {
+        StepDirection direction = this.pathDescription.get(this.currentPathItem).getStepDirection();
+        if (direction == StepDirection.Right) {
+            SetShownImageTo(R.drawable.arrow_right);
+        }
+        else if (direction == StepDirection.Left) {
+            SetShownImageTo(R.drawable.arrow_left);
+        }
+    }
+
+    private void SetShownImageTo(int pictureIndex) {
+        ImageView imageViewDirection = (ImageView) findViewById(R.id.FollowingDirectionImageView);
+        imageViewDirection.setImageResource(pictureIndex);
     }
 
     private List<PathDescription> TryParseReturnCode(String returnedCode) {
@@ -166,5 +190,11 @@ public class TurnActivity extends Activity implements SensorEventListener {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public void onStep() {
+        this.HandleStep();
+        this.DisplayPathDescriptionOnUi();
     }
 }

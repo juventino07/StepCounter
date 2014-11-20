@@ -6,7 +6,7 @@ import android.os.Parcelable;
 /**
  * Created by cyrilleulmi on 11/17/2014.
  */
-public class PathDescription implements Parcelable{
+public class PathDescription{
     private int amountOfSteps;
     private StepDirection stepDirection;
 
@@ -21,15 +21,5 @@ public class PathDescription implements Parcelable{
 
     public StepDirection getStepDirection(){
         return stepDirection;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-
     }
 }

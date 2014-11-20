@@ -1,29 +1,36 @@
 package com.example.cyrilleulmi.stepcounter;
 
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 
 public class StepCounter implements SensorEventListener {
 
-	private static final int LONG = 1000;
-	private static final int SHORT = 50;
+	private static final int LONG = 500;
+	private static final int SHORT = 250;
+    private final Sensor accelerationSensor;
 
-	private boolean accelerating = false;
+    private boolean accelerating = false;
 	private StepListener listener;
 
 	private RingBuffer shortBuffer = new RingBuffer(SHORT);
 	private RingBuffer longBuffer = new RingBuffer(LONG);
 
-	public StepCounter(StepListener listener) {
+    private SensorManager sensorManager;
+
+	public StepCounter(StepListener listener, Context context) {
 		this.listener = listener;
+        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_UI);
 	}
 
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 	}
 
 	public void onSensorChanged(SensorEvent event) {
-		
 		float x = event.values[0];
 		float y = event.values[1];
 		float z = event.values[2];
