@@ -8,8 +8,8 @@ import android.hardware.SensorManager;
 
 public class StepCounter implements SensorEventListener {
 
-	private static final int LONG = 500;
-	private static final int SHORT = 250;
+	private static final int LONG = 7000;
+	private static final int SHORT = 20;
     private final Sensor accelerationSensor;
 
     private boolean accelerating = false;
@@ -31,10 +31,10 @@ public class StepCounter implements SensorEventListener {
 	}
 
 	public void onSensorChanged(SensorEvent event) {
-		float x = event.values[0];
+        float x = event.values[0];
 		float y = event.values[1];
 		float z = event.values[2];
-		float magnitude = (float) (Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+		float magnitude = (float) (Math.pow(x, 2) + 3 * Math.pow(y, 2) + Math.pow(z, 2));
 
 		shortBuffer.put(magnitude);
 		longBuffer.put(magnitude);
@@ -44,7 +44,7 @@ public class StepCounter implements SensorEventListener {
 
 		if (!accelerating && (shortAverage > longAverage * 1.1)) {
 			accelerating = true;
-			listener.onStep();
+            listener.onStep();
 		}
 
 		if ((accelerating && shortAverage < longAverage * 0.9)) {

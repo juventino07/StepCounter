@@ -1,25 +1,23 @@
 package com.example.cyrilleulmi.stepcounter;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 
 import java.util.List;
+import java.util.Locale;
 
-public class TurnActivity extends Activity implements SensorEventListener, StepListener {
+public class TurnActivity extends Activity implements StepListener, TextToSpeech.OnInitListener {
 
     private static final int BUFFER_SIZE = 10;
     private SensorManager sensorManager;
@@ -32,6 +30,7 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
     private Integer currentPathItem = 0;
     private String jsonPathDefinition;
     private StepCounter stepCounter;
+    private TextToSpeech mTts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +38,7 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
         setContentView(R.layout.activity_turn);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        this.mTts = new TextToSpeech(this, this);
     }
 
     @Override
@@ -57,7 +57,6 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
         this.jsonPathDefinition = savedInstanceState.getString("jsonPathDefinition");
 
         this.ParseReturnCode(this.jsonPathDefinition);
-
         this.DisplayPathDescriptionOnUi();
     }
 
@@ -71,7 +70,6 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_UI);
         this.DisplayPathDescriptionOnUi();
         this.stepCounter = new StepCounter(this, this);
     }
@@ -79,44 +77,6 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
     @Override
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(this);
-    }
-
-    float[] rotationMatrix = new float[16];
-    float[] orientationVals = new float[3];
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
-            SensorManager.getOrientation(rotationMatrix, orientationVals);
-
-            orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
-
-            // Zuerst füllen wir den Buffer mit der Initialrotation um den
-            // Startwinkel zu bestimmen, und wenn dieser voll ist (was sehr
-            // schnell passiert), dann füllen wir einen zweiten RingBuffer.
-            if (initialRotation.getCount() < BUFFER_SIZE) {
-                initialRotation.put(orientationVals[0]);
-            } else {
-                rotation.put(orientationVals[0]);
-            }
-
-            // Wenn der zweite Buffer auch gefüllt ist, vergleichen wir die
-            // beiden Durchschnittswerte fortlaufend, und sobald wir eine
-            // Drehung von grösser als 50 Grad erkennen, melden wir dies.
-            if (rotation.getCount() >= BUFFER_SIZE) {
-                float r = Math.abs(rotation.getAverage() - initialRotation.getAverage());
-                if (r > 50) {
-                    Toast.makeText(this, "Du hast dich gedreht!", Toast.LENGTH_SHORT).show();
-                    System.out.println("Du hast dich gedreht!");
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -130,7 +90,13 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
         this.jsonPathDefinition = returnedCode;
         this.pathDescription = TryParseReturnCode(returnedCode);
 
-        this.DisplayPathDescriptionOnUi();
+        if(JsonSerializer.endStationNumber != null){
+            HsrLogger.LogMessage(JsonSerializer.getJsonString(), this);
+        }
+        else if (JsonSerializer.startStationNumber != null){
+            this.DisplayPathDescriptionOnUi();
+            this.SpeakStatus();
+        }
     }
 
     public void ScanBarcode_Click(MenuItem item) {
@@ -150,7 +116,27 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
         if (this.amountOfTakenSteps == this.pathDescription.get(this.currentPathItem).getAmountOfSteps()){
             this.amountOfTakenSteps = 0;
             this.currentPathItem++;
+            this.SpeakStatus();
         }
+    }
+
+    private void SpeakStatus() {
+        StepDirection stepDirection = this.getCurrentDirection();
+        String string = this.pathDescription.get(this.currentPathItem).getAmountOfSteps().toString();
+        String amountOfStepsToRead = "Walk " + string + " Steps forward";
+        if (stepDirection == StepDirection.Right){
+            this.SpeakText("Turn Right, then " + amountOfStepsToRead);
+        }
+        else if (stepDirection == StepDirection.Left){
+            this.SpeakText("TurnLeft, then " + amountOfStepsToRead);
+        }
+        else if (stepDirection == StepDirection.None){
+            this.SpeakText(amountOfStepsToRead);
+        }
+    }
+
+    private void SpeakText(String textToRead) {
+        this.mTts.speak(textToRead, TextToSpeech.QUEUE_FLUSH, null);
     }
 
     private void DisplayPathDescriptionOnUi() {
@@ -169,13 +155,17 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
     }
 
     private void SetShownArrowImage() {
-        StepDirection direction = this.pathDescription.get(this.currentPathItem).getStepDirection();
+        StepDirection direction = getCurrentDirection();
         if (direction == StepDirection.Right) {
-            SetShownImageTo(R.drawable.arrow_right);
+            SetShownImageTo(R.drawable.right);
         }
         else if (direction == StepDirection.Left) {
-            SetShownImageTo(R.drawable.arrow_left);
+            SetShownImageTo(R.drawable.left);
         }
+    }
+
+    private StepDirection getCurrentDirection() {
+        return this.pathDescription.get(this.currentPathItem).getStepDirection();
     }
 
     private void SetShownImageTo(int pictureIndex) {
@@ -184,17 +174,20 @@ public class TurnActivity extends Activity implements SensorEventListener, StepL
     }
 
     private List<PathDescription> TryParseReturnCode(String returnedCode) {
-        try {
-            return JsonToStepListParser.Parse(returnedCode);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
+            return JsonParser.Parse(returnedCode);
     }
 
     @Override
     public void onStep() {
-        this.HandleStep();
-        this.DisplayPathDescriptionOnUi();
+        if(this.pathDescription != null){
+            this.HandleStep();
+            this.DisplayPathDescriptionOnUi();
+        }
     }
+
+    @Override
+    public void onInit(int status) {
+        mTts.setLanguage(Locale.UK);
+    }
+
 }

@@ -4,37 +4,29 @@
     android:layout_height="fill_parent"
     android:screenOrientation="portrait">
 
-
-<TextView
-    android:id="@+id/StepsPrefixText"
-    android:text="@string/StepsPrefixText"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" />
 <ImageView
     android:id="@+id/FollowingDirectionImageView"
     android:layout_width="wrap_content"
-    android:layout_height="40dp"
+    android:layout_height="200dp"
     />
 <TextView
     android:id="@+id/amountOfStepsTextView"
     android:layout_width="wrap_content"
     android:textSize="45pt"
     android:textStyle="bold"
-    android:layout_height="wrap_content" />
-<TextView
-    android:id="@+id/FollowingDirectionPrefixTextView"
-    android:text="@string/FollowingDirectionPrefixTextView"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" />
-<TextView
-    android:id="@+id/FollowingDirectionTextView"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" />
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    />
 <Button
     android:layout_marginTop="100dp"
     android:layout_width="200dp"
     android:layout_height="80dp"
     android:text="next"
     android:onClick="NextItemClick"/>
+
+
+
+
+
 
 </LinearLayout>
