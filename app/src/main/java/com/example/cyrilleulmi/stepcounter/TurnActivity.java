@@ -1,5 +1,6 @@
 package com.example.cyrilleulmi.stepcounter;
 
+import android.animation.TypeConverter;
 import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -11,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 
@@ -105,19 +107,32 @@ public class TurnActivity extends Activity implements StepListener, TextToSpeech
         startActivityForResult(intent, 0);
     }
 
-    public void NextItemClick(View view) {
+    public void Next(View view) {
         this.HandleStep();
         this.DisplayPathDescriptionOnUi();
     }
 
     private void HandleStep() {
-        this.amountOfTakenSteps++;
+        try {
+            this.amountOfTakenSteps++;
 
-        if (this.amountOfTakenSteps == this.pathDescription.get(this.currentPathItem).getAmountOfSteps()){
-            this.amountOfTakenSteps = 0;
-            this.currentPathItem++;
-            this.SpeakStatus();
+            if (this.amountOfTakenSteps == this.pathDescription.get(this.currentPathItem).getAmountOfSteps()) {
+                this.amountOfTakenSteps = 0;
+                this.currentPathItem++;
+                this.SpeakStatus();
+            }
         }
+        catch (Exception e) {
+            TextView textView = (TextView)findViewById(R.id.amountOfStepsTextView);
+            textView.setText("");
+            SetShownImageTo(R.drawable.destination);
+            String destinationmessage = "Here is your target destination";
+            SpeakText(destinationmessage);
+            Toast toast = Toast.makeText(this, destinationmessage, Toast.LENGTH_LONG);
+            toast.show();
+        }
+
+
     }
 
     private void SpeakStatus() {
@@ -149,9 +164,9 @@ public class TurnActivity extends Activity implements StepListener, TextToSpeech
     }
 
     private void SetShownText() {
-        TextView textViewAmountOfSteps = (TextView)findViewById(R.id.amountOfStepsTextView);
-        Integer amountOfStepsToTake = this.pathDescription.get(this.currentPathItem).getAmountOfSteps() - this.amountOfTakenSteps;
-        textViewAmountOfSteps.setText(amountOfStepsToTake.toString());
+            TextView textViewAmountOfSteps = (TextView) findViewById(R.id.amountOfStepsTextView);
+            Integer amountOfStepsToTake = this.pathDescription.get(this.currentPathItem).getAmountOfSteps() - this.amountOfTakenSteps;
+            textViewAmountOfSteps.setText(amountOfStepsToTake.toString());
     }
 
     private void SetShownArrowImage() {
@@ -182,6 +197,9 @@ public class TurnActivity extends Activity implements StepListener, TextToSpeech
         if(this.pathDescription != null){
             this.HandleStep();
             this.DisplayPathDescriptionOnUi();
+        }
+        else {
+
         }
     }
 

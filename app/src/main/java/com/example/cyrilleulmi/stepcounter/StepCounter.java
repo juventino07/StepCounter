@@ -8,8 +8,8 @@ import android.hardware.SensorManager;
 
 public class StepCounter implements SensorEventListener {
 
-	private static final int LONG = 7000;
-	private static final int SHORT = 20;
+	private static final int LONG = 700;
+	private static final int SHORT = 50;
     private final Sensor accelerationSensor;
 
     private boolean accelerating = false;
